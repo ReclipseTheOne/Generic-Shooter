@@ -1,0 +1,22 @@
+{   
+    "debug": "False",
+    "window": {
+        "start_width": 800,
+        "start_height": 600
+    },
+    "asteroid": {
+        "min_speed": 0.1,
+        "max_speed": 6,
+        "min_size": 20,
+        "max_size": 50,
+        "min_rotation_speed": 0.01,
+        "max_rotation_speed": 0.03
+    },
+    "gameplay": {
+        "max_asteroid_spawn_at_a_time": 5,
+        "asteroid_spawn_interval": 1000,
+        "lives": 3,
+        "tps": 60,
+        "cache_size": 500
+    }
+}
