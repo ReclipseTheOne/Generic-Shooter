@@ -127,10 +127,10 @@ class Asteroid(Drawable, Tickable):
             self.rotation_angle += self.rotation_speed
 
             # Update corner positions:
-            self.corner_top_right = (self.x + self.size / 2, self.y - self.size / 2)
-            self.corner_top_left = (self.x - self.size / 2, self.y - self.size / 2)
-            self.corner_bottom_right = (self.x + self.size / 2, self.y + self.size / 2)
-            self.corner_bottom_left = (self.x - self.size / 2, self.y + self.size / 2)
+            self.corner_top_right = ((self.x + self.size / 2) * window_width_multiplier, (self.y - self.size / 2) * window_height_multiplier)
+            self.corner_top_left = ((self.x - self.size / 2) * window_width_multiplier, (self.y - self.size / 2) * window_height_multiplier)
+            self.corner_bottom_right = ((self.x + self.size / 2) * window_width_multiplier, (self.y + self.size / 2) * window_height_multiplier)
+            self.corner_bottom_left = ((self.x - self.size / 2) * window_width_multiplier, (self.y + self.size / 2) * window_height_multiplier)
 
     def __str__(self):
         return f"Asteroid with ID {self.id}"
@@ -224,7 +224,7 @@ class Star(Drawable, Tickable):
     def __init__(self, y=0):
         self.x = random.randint(0, SCREEN.get_width())
         self.y = y
-        self.y_speed = random.uniform(0.5, 0.7)
+        self.y_speed = random.uniform(0.3, 0.7)
         self.color = random.choice(
             [config.Colors.PALE_BLUE.value,
              config.Colors.PALE_YELLOW.value,
@@ -278,6 +278,7 @@ class Spawning(Tickable):
                 for i in range(1, random.randint(1, 5)):
                     Asteroid.spawn_asteroid()
                 self.asteroid_time_stamp = now
+
 
 SPAWNING = Spawning()
 OBJECTS.append(SPAWNING)

@@ -1,12 +1,12 @@
 {   
     "debug": "False",
     "window": {
-        "start_width": 800,
-        "start_height": 600
+        "start_width": 1600,
+        "start_height": 900
     },
     "asteroid": {
-        "min_speed": 0.1,
-        "max_speed": 6,
+        "min_speed": 0.5,
+        "max_speed": 1.5,
         "min_size": 20,
         "max_size": 50,
         "min_rotation_speed": 0.01,

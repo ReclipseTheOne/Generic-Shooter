@@ -3,7 +3,7 @@ import pygame as pg
 from gslogging import GSLogger
 from enum import Enum
 
-FLAGS = pg.DOUBLEBUF | pg.HWSURFACE
+FLAGS = pg.DOUBLEBUF | pg.HWSURFACE | pg.RESIZABLE
 
 class Colors(Enum):
     WHITE = (255, 255, 255)
