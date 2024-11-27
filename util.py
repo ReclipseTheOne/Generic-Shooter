@@ -1,4 +1,5 @@
 import math
+import pygame as pg
 
 def rotate_point(x, y, cx, cy, theta):
     # Translate point to origin
@@ -14,3 +15,8 @@ def rotate_point(x, y, cx, cy, theta):
     new_y = rotated_y + cy
 
     return new_x, new_y
+
+
+def render_text(surface: pg.Surface, text: str, font: pg.font.Font, color: tuple, x: int, y: int):
+    text_surface = font.render(text, True, color)
+    surface.blit(text_surface, (x, y))

@@ -10,7 +10,8 @@
         "min_size": 20,
         "max_size": 50,
         "min_rotation_speed": 0.01,
-        "max_rotation_speed": 0.03
+        "max_rotation_speed": 0.03,
+        "spawn_interval": 1000
     },
     "gameplay": {
         "max_asteroid_spawn_at_a_time": 5,
