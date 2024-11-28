@@ -5,8 +5,9 @@ except ImportError:
 
 # Built-in or file imports
 import config
-from API import Tickable, Drawable
+from API import Tickable, Drawable, IHitbox
 from gslogging import GSLogger
+from typing import Union
 import random
 import time
 import math
@@ -15,10 +16,12 @@ import util
 # Initialization
 OBJECTS = []
 ASTEROID_SPAWN_SIDE = ["top", "bottom", "left", "right"]
+SHOW_HITBOXES = False
 
 window_width_multiplier = 1
 window_height_multiplier = 1
 running = True
+
 if config.CONFIG["debug"] == "True":
     debug = True
 else:
@@ -39,6 +42,35 @@ pg.mouse.set_visible(False)
 
 
 # Classes
+class Hitbox(Drawable):
+    def __init__(self, x1, x2, y1, y2):
+        self.x1 = x1
+        self.x2 = x2
+        self.y1 = y1
+        self.y2 = y2
+        self.width = x2 - x1
+        self.height = y2 - y1
+
+    def is_colliding(self, arg: Union['Hitbox', tuple[float, float]]):
+        if isinstance(arg, tuple):
+            x, y = arg
+            return self.x1 <= x <= self.x2 and self.y1 <= y <= self.y2
+        else:
+            return self.x1 <= arg.x2 and self.x2 >= arg.x1 and self.y1 <= arg.y2 and self.y2 >= arg.y1
+
+    def draw(self):
+        if SHOW_HITBOXES is True:
+            pg.draw.rect(SCREEN, (255, 0, 0), (self.x1, self.y1, self.width, self.height))
+
+    def update(self, x1, x2, y1, y2):
+        self.x1 = x1
+        self.x2 = x2
+        self.y1 = y1
+        self.y2 = y2
+        self.width = x2 - x1
+        self.height = y2 - y1
+
+
 class Crosshair(Drawable, Tickable):
     def __init__(self):
         self.x = 0
@@ -51,21 +83,19 @@ class Crosshair(Drawable, Tickable):
     def tick(self):
         self.x, self.y = pg.mouse.get_pos()
 
-    def check_if_hit(self, event):
-        pass
-        # Check if an asteroid is clicked on based on fill color ("white")
-        # for obj in OBJECTS:
-        #     if isinstance(obj, Asteroid):
-        #         if obj.rect.collidepoint(self.x, self.y):
-        #             GSLogger.debug(obj)
-        #             OBJECTS.remove(obj)
+    def check_if_hit(self):
+        for obj in OBJECTS:
+            if isinstance(obj, Asteroid):
+                if obj.is_colliding((self.x, self.y)):
+                    OBJECTS.remove(obj)
+                    SCORECOUNTER.add_score(1)
 
 
 CROSSHAIR = Crosshair()
 OBJECTS.append(CROSSHAIR)
 
 
-class Asteroid(Drawable, Tickable):
+class Asteroid(IHitbox, Drawable, Tickable):
     def __init__(self):
         self.id = time.time_ns()
         side = random.choice(ASTEROID_SPAWN_SIDE)
@@ -106,6 +136,19 @@ class Asteroid(Drawable, Tickable):
         self.corner_bottom_right = ((self.x + self.size / 2) * window_width_multiplier, ( self.y + self.size / 2) * window_height_multiplier)
         self.corner_bottom_left = ((self.x - self.size / 2) * window_width_multiplier, ( self.y + self.size / 2) * window_height_multiplier)
 
+        self._hitbox = Hitbox(
+            self.corner_top_left[0],
+            self.corner_bottom_right[0],
+            self.corner_top_left[1],
+            self.corner_bottom_right[1]
+        )
+
+    def get_hitbox(self):
+        return self._hitbox
+
+    def is_colliding(self, pos: tuple[float, float]):
+        return self._hitbox.is_colliding(pos)
+
     def draw(self):
         pg.draw.polygon(
             SCREEN,
@@ -131,6 +174,13 @@ class Asteroid(Drawable, Tickable):
             self.corner_top_left = ((self.x - self.size / 2) * window_width_multiplier, (self.y - self.size / 2) * window_height_multiplier)
             self.corner_bottom_right = ((self.x + self.size / 2) * window_width_multiplier, (self.y + self.size / 2) * window_height_multiplier)
             self.corner_bottom_left = ((self.x - self.size / 2) * window_width_multiplier, (self.y + self.size / 2) * window_height_multiplier)
+
+            self._hitbox.update(
+                self.corner_top_left[0],
+                self.corner_bottom_right[0],
+                self.corner_top_left[1],
+                self.corner_bottom_right[1]
+            )
 
     def __str__(self):
         return f"Asteroid with ID {self.id}"
@@ -311,7 +361,16 @@ def key_press(event: pg.event.Event):
                     OBJECTS.remove(obj)
                     if debug is True:
                         GSLogger.debug("Asteroid cleared")
+        elif event.key == pg.K_SPACE:
+            CROSSHAIR.check_if_hit()
 
+        elif event.key == pg.K_h:
+            global SHOW_HITBOXES
+            if SHOW_HITBOXES is True:
+                GSLogger.debug("Hitboxes hidden")
+            else:
+                GSLogger.debug("Hitboxes shown")
+            SHOW_HITBOXES = not SHOW_HITBOXES
 
 # GenericShooter.bind("<KeyPress>", key_press)
 # GenericShooter.bind("<KeyRelease>", key_release)
@@ -335,6 +394,8 @@ while running:
             obj.draw()
         if isinstance(obj, Tickable):
             obj.tick() 
+        if isinstance(obj, IHitbox):
+            obj.get_hitbox().draw()
 
     # Multiply calculation and rendering by how much the window has been resized
     window_height_multiplier = SCREEN.get_height() / config.WINDOW_START_HEIGHT 
