@@ -1,6 +1,7 @@
 import math
 import pygame as pg
 
+
 def rotate_point(x, y, cx, cy, theta):
     # Translate point to origin
     temp_x = x - cx

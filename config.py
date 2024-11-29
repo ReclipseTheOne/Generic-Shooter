@@ -20,7 +20,6 @@ class Colors(Enum):
     PALE_GREEN = (230, 251, 230)
 
 
-
 class Fonts(Enum):
     pg.font.init()
     NONE = pg.font.Font(None, 16)
@@ -59,6 +58,7 @@ CACHE_SIZE = CONFIG["gameplay"]["cache_size"] if CONFIG_EXISTS else 500
 
 
 def reload_config():
+    # Warning l.f.l. (long f. line)
     global CONFIG_EXISTS, CONFIG, WINDOW_START_WIDTH, WINDOW_START_HEIGHT, MAX_ASTEROID_SPEED, MIN_ASTEROID_SPEED, MAX_ASTEROID_SIZE, MIN_ASTEROID_SIZE, MAX_ASTEROID_ROTATION_SPEED, MIN_ASTEROID_ROTATION_SPEED, TPS, LIVES, CACHE_SIZE, ASTEROID_SPAWN_INTERVAL
     CONFIG_EXISTS = True
     CONFIG = {}

@@ -1,4 +1,3 @@
-from rites.logger import Logger
 try:
     from rites import logger
 except ImportError:

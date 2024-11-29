@@ -18,6 +18,9 @@ OBJECTS = []
 ASTEROID_SPAWN_SIDE = ["top", "bottom", "left", "right"]
 SHOW_HITBOXES = False
 
+cached_window_width = config.WINDOW_START_WIDTH
+cached_window_height = config.WINDOW_START_HEIGHT
+
 window_width_multiplier = 1
 window_height_multiplier = 1
 running = True
@@ -92,7 +95,7 @@ class Crosshair(Drawable, Tickable):
 
 
 CROSSHAIR = Crosshair()
-OBJECTS.append(CROSSHAIR)
+# OBJECTS.append(CROSSHAIR)
 
 
 class Asteroid(IHitbox, Drawable, Tickable):
@@ -299,6 +302,7 @@ class Star(Drawable, Tickable):
             OBJECTS.remove(self)
         self.y += self.y_speed
 
+
 # Initial decoration stars
 for i in range(1, config.WINDOW_START_HEIGHT):
     for j in range(1, random.randint(1, 4)):
@@ -397,9 +401,23 @@ while running:
         if isinstance(obj, IHitbox):
             obj.get_hitbox().draw()
 
+    # Put CROSSHAIR on top Z-Index
+    CROSSHAIR.tick()
+    CROSSHAIR.draw()
+
     # Multiply calculation and rendering by how much the window has been resized
     window_height_multiplier = SCREEN.get_height() / config.WINDOW_START_HEIGHT 
     window_width_multiplier = SCREEN.get_width() / config.WINDOW_START_WIDTH
+
+    if cached_window_width != SCREEN.get_width() or cached_window_height != SCREEN.get_height():
+        if debug is True:
+            GSLogger.debug("Window resized")
+            GSLogger.debug(f"Window width multiplier: {window_width_multiplier}")
+            GSLogger.debug(f"Window height multiplier: {window_height_multiplier}")
+            GSLogger.debug(f"Window width: {SCREEN.get_width()} - Prev: {cached_window_width} Start: {config.WINDOW_START_WIDTH} ")
+            GSLogger.debug(f"Window height: {SCREEN.get_height()} - Prev: {cached_window_height} - Start: {config.WINDOW_START_HEIGHT}")
+            cached_window_height = SCREEN.get_height()
+            cached_window_width = SCREEN.get_width()
 
     # Spawn decoration stars
     for i in range(1, random.randint(1, 4)):
