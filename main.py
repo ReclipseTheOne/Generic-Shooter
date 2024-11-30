@@ -92,28 +92,31 @@ class Crosshair(Drawable, Tickable):
                 if obj.is_colliding((self.x, self.y)):
                     OBJECTS.remove(obj)
                     SCORECOUNTER.add_score(1)
+                    SCORECOUNTER.streak += 1
 
 
 CROSSHAIR = Crosshair()
-# OBJECTS.append(CROSSHAIR)
 
 
 class Asteroid(IHitbox, Drawable, Tickable):
+    padding = math.floor(SCREEN.get_width() * (config.PADDING / 100))
+
     def __init__(self):
         self.id = time.time_ns()
+        self.speed = random.uniform(config.MIN_ASTEROID_SPEED, config.MAX_ASTEROID_SPEED)
         side = random.choice(ASTEROID_SPAWN_SIDE)
         if side == "top":
-            self.x = random.randint(0, SCREEN.get_width())
+            self.x = random.randint(self.padding, SCREEN.get_width() - self.padding)
             self.y = 0
         elif side == "bottom":
-            self.x = random.randint(0, SCREEN.get_width())
+            self.x = random.randint(self.padding, SCREEN.get_width() - self.padding)
             self.y = SCREEN.get_height()
         elif side == "left":
             self.x = 0
-            self.y = random.randint(0, SCREEN.get_height())
+            self.y = random.randint(self.padding, SCREEN.get_height() - self.padding)
         elif side == "right":
             self.x = SCREEN.get_width()
-            self.y = random.randint(0, SCREEN.get_height())
+            self.y = random.randint(self.padding, SCREEN.get_height() - self.padding)
 
         self.rotation_angle = 0 # in radians
 
@@ -122,8 +125,11 @@ class Asteroid(IHitbox, Drawable, Tickable):
         self.rotation_speed = random.uniform(config.MIN_ASTEROID_ROTATION_SPEED, config.MAX_ASTEROID_ROTATION_SPEED)
 
         # Movement
-        self.vecX = random.uniform(config.MIN_ASTEROID_SPEED, config.MAX_ASTEROID_SPEED)
-        self.vecY = random.uniform(config.MIN_ASTEROID_SPEED, config.MAX_ASTEROID_SPEED)
+        self.x_modifier = math.floor((self.x / SCREEN.get_width() - 0.5) * 2 * 100) / 100  # -1 to 1 (2 decimal precision) range based on X position, 0 is middle, -1 is left, 1 is right
+        self.y_modifier = math.floor((self.y / SCREEN.get_height() - 0.5) * 2 * 100) / 100  # -1 to 1 (2 decimal precision) range based on Y position, 0 is middle, -1 is top, 1 is bottom
+
+        self.vecX = self.speed * abs(self.x_modifier)
+        self.vecY = self.speed * abs(self.y_modifier)
         if side == "top":
             pass
         elif side == "bottom":
@@ -165,8 +171,9 @@ class Asteroid(IHitbox, Drawable, Tickable):
         )
 
     def tick(self):
-        if self.x < 0 or self.x > SCREEN.get_width() or self.y < 0 or self.y > SCREEN.get_height():
+        if self.x < -self.size or self.x > SCREEN.get_width() + self.size or self.y < -self.size or self.y > SCREEN.get_height() + self.size:
             OBJECTS.remove(self)
+            SCORECOUNTER.lose_life()
         else:
             self.x += self.vecX
             self.y += self.vecY
@@ -200,6 +207,7 @@ class Asteroid(IHitbox, Drawable, Tickable):
 class FPSCounter(Drawable):
     def __init__(self):
         self.fps = 0
+        self.show = True
         self.cache = []
         self.ms_cache = []
 
@@ -240,6 +248,9 @@ class FPSCounter(Drawable):
         if len(self.ms_cache) > config.CACHE_SIZE:
             self.ms_cache.pop(0)
 
+    def show(self, value):
+        self.show = value
+
 
 FPS_COUNTER = FPSCounter()
 OBJECTS.append(FPS_COUNTER)
@@ -249,24 +260,40 @@ class ScoreCounter(Drawable):
     def __init__(self):
         self.score = 0
         self.highestscore = 0
+        self.streak = 1
+        self.lives = config.LIVES
+        self.show = True
 
     def draw(self):
-        util.render_text(
-            SCREEN,
-            f"Score: {self.score} - Highest: {self.highestscore}",
-            config.Fonts.ROBOTO.value,
-            config.Colors.WHITE.value,
-            5,
-            20
-        )
+        if self.show is True:
+            util.render_text(
+                SCREEN,
+                f"Lives: {self.lives} - Streak: {self.streak} - Score: {self.score} - Highest: {self.highestscore}",
+                config.Fonts.ROBOTO.value,
+                config.Colors.WHITE.value,
+                5,
+                20
+            )
 
     def add_score(self, score):
-        self.score += score
+        self.score += score * self.streak
         if self.score > self.highestscore:
             self.highestscore = self.score
 
     def reset(self):
         self.score = 0
+        self.lives = config.LIVES
+        SPAWNING.asteroid_spawn_interval = config.ASTEROID_SPAWN_INTERVAL
+
+    def lose_life(self):
+        self.lives -= 1
+        self.streak = 1
+        if self.lives == 0:
+            self.reset()
+
+    def show(self, value):
+        self.show = value
+
 
 
 SCORECOUNTER = ScoreCounter()
@@ -317,7 +344,7 @@ class Spawning(Tickable):
         self.is_enabled = False
 
     @staticmethod
-    def now():
+    def now():  # in ms
         return time.time_ns() / 1_000_000
 
     def is_enabled(self, enabled):
@@ -328,9 +355,10 @@ class Spawning(Tickable):
 
         if self.is_enabled is True:
             # Asteroid Spawning
-            if now - self.asteroid_time_stamp > self.asteroid_spawn_interval:
+            if now - self.asteroid_time_stamp > 1000 + self.asteroid_spawn_interval:
                 for i in range(1, random.randint(1, 5)):
                     Asteroid.spawn_asteroid()
+                self.asteroid_spawn_interval *= random.uniform(0.92, 0.99)
                 self.asteroid_time_stamp = now
 
 
@@ -375,11 +403,6 @@ def key_press(event: pg.event.Event):
             else:
                 GSLogger.debug("Hitboxes shown")
             SHOW_HITBOXES = not SHOW_HITBOXES
-
-# GenericShooter.bind("<KeyPress>", key_press)
-# GenericShooter.bind("<KeyRelease>", key_release)
-# GenericShooter.bind("<Motion>", CROSSHAIR.update_pos)
-# GenericShooter.bind("<Button-1>", CROSSHAIR.check_if_hit)
 
 
 # Runtime

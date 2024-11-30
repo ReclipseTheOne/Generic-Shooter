@@ -51,6 +51,7 @@ MIN_ASTEROID_SIZE = CONFIG["asteroid"]["min_size"] if CONFIG_EXISTS else 10
 MAX_ASTEROID_ROTATION_SPEED = CONFIG["asteroid"]["max_rotation_speed"] if CONFIG_EXISTS else 0.03
 MIN_ASTEROID_ROTATION_SPEED = CONFIG["asteroid"]["min_rotation_speed"] if CONFIG_EXISTS else 0.01
 ASTEROID_SPAWN_INTERVAL = CONFIG["asteroid"]["spawn_interval"] if CONFIG_EXISTS else 1000
+PADDING = CONFIG["asteroid"]["padding"] if CONFIG_EXISTS else 10
 
 LIVES = CONFIG["gameplay"]["lives"] if CONFIG_EXISTS else 3
 TPS = CONFIG["gameplay"]["tps"] if CONFIG_EXISTS else 60
