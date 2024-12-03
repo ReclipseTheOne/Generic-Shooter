@@ -33,6 +33,8 @@ else:
 # Pygame initialization
 gs = pg.init()
 pg.display.init()
+pg.mixer.init()
+
 
 GSLogger.info(f"Pygame init: {gs[0]}, {gs[1]}")
 CLOCK = pg.time.Clock()
@@ -281,13 +283,23 @@ class ScoreCounter(Drawable):
             self.highestscore = self.score
 
     def reset(self):
+        DAMAGE_SCREEN.damage(2)
+
         self.score = 0
         self.lives = config.LIVES
+        SPAWNING.is_enabled = False
+
+        global OBJECTS
+        OBJECTS = util.clear_list_of(OBJECTS, Asteroid)
+
         SPAWNING.asteroid_spawn_interval = config.ASTEROID_SPAWN_INTERVAL
 
     def lose_life(self):
         self.lives -= 1
         self.streak = 1
+
+        DAMAGE_SCREEN.damage()
+
         if self.lives == 0:
             self.reset()
 
@@ -366,6 +378,31 @@ SPAWNING = Spawning()
 OBJECTS.append(SPAWNING)
 
 
+class DamageScreen(Drawable):
+    dmg_surface = pg.Surface((SCREEN.get_width(), SCREEN.get_height()))
+
+    def __init__(self, surface: pg.Surface):
+        self.surface = surface
+        self.alpha = 0
+        self.color = (255, 0, 0)
+
+    def draw(self):
+        # GSLogger.info("Drawing damage screen at alpha: " + str(self.alpha))
+        if self.alpha >= 0:
+            self.dmg_surface.set_alpha(self.alpha)
+            self.dmg_surface.fill(self.color)
+            self.surface.blit(self.dmg_surface, (0, 0))
+
+            self.alpha = self.alpha - 1
+
+    def damage(self, multiplier=1):
+        if (multiplier > 2):
+            multiplier = 2
+        self.alpha = 90 * multiplier
+
+DAMAGE_SCREEN = DamageScreen(SCREEN)
+OBJECTS.append(DAMAGE_SCREEN)
+
 # Event Binding
 def key_press(event: pg.event.Event):
     if event.type == pg.KEYDOWN:
@@ -388,11 +425,10 @@ def key_press(event: pg.event.Event):
             Asteroid.spawn_asteroid()
 
         elif event.key == pg.K_c:
-            for obj in OBJECTS:
-                if isinstance(obj, Asteroid):
-                    OBJECTS.remove(obj)
-                    if debug is True:
-                        GSLogger.debug("Asteroid cleared")
+            global OBJECTS
+            OBJECTS = util.clear_list_of(OBJECTS, Asteroid)
+            if debug is True:
+                GSLogger.debug("Asteroid cleared")
         elif event.key == pg.K_SPACE:
             CROSSHAIR.check_if_hit()
 

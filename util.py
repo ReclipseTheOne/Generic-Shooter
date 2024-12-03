@@ -21,3 +21,7 @@ def rotate_point(x, y, cx, cy, theta):
 def render_text(surface: pg.Surface, text: str, font: pg.font.Font, color: tuple, x: int, y: int):
     text_surface = font.render(text, True, color)
     surface.blit(text_surface, (x, y))
+
+
+def clear_list_of(objects: list, obj_type: type):
+    return [obj for obj in objects if not isinstance(obj, obj_type)]
