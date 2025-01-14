@@ -5,6 +5,7 @@ except ImportError:
 
 # Built-in or file imports
 import config
+import resourceLoading
 from API import Tickable, Drawable, IHitbox
 from gslogging import GSLogger
 from typing import Union
@@ -33,7 +34,6 @@ else:
 # Pygame initialization
 gs = pg.init()
 pg.display.init()
-pg.mixer.init()
 
 
 GSLogger.info(f"Pygame init: {gs[0]}, {gs[1]}")
@@ -89,9 +89,11 @@ class Crosshair(Drawable, Tickable):
         self.x, self.y = pg.mouse.get_pos()
 
     def check_if_hit(self):
+        resourceLoading.sfx.play(resourceLoading.LASER)
         for obj in OBJECTS:
             if isinstance(obj, Asteroid):
                 if obj.is_colliding((self.x, self.y)):
+                    resourceLoading.sfx.play(resourceLoading.getExplosionSound())
                     OBJECTS.remove(obj)
                     SCORECOUNTER.add_score(1)
                     SCORECOUNTER.streak += 1
@@ -295,12 +297,15 @@ class ScoreCounter(Drawable):
         SPAWNING.asteroid_spawn_interval = config.ASTEROID_SPAWN_INTERVAL
 
     def lose_life(self):
+        if self.lives >= 2:
+            resourceLoading.sfx.play(resourceLoading.HURT)
         self.lives -= 1
         self.streak = 1
 
         DAMAGE_SCREEN.damage()
 
         if self.lives == 0:
+            resourceLoading.sfx.play(resourceLoading.RESET_LIFE)
             self.reset()
 
     def show(self, value):
@@ -375,6 +380,7 @@ class Spawning(Tickable):
 
 
 SPAWNING = Spawning()
+SPAWNING.is_enabled = True
 OBJECTS.append(SPAWNING)
 
 
@@ -496,5 +502,10 @@ while running:
         FPS_COUNTER.push_to_ms(time_diff_ns / 1_000_000)
     else:
         FPS_COUNTER.update_fps(0)
+
+    bg_music = pg.mixer.Channel(1)
+
+    if bg_music.get_queue() is None:
+        bg_music.queue(resourceLoading.getBackgroundMusic())
 
 pg.quit()
