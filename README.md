@@ -9,7 +9,7 @@ Just boot up and play :>
 [H] - Show Hitboxes <br>
 [E] - Enable/Disable Asteroid Spawning <br>
 [A] - Spawn an Asteroid <br>
-[C] - Clear Screen Objects <br
+[C] - Clear Screen Objects <br>
 
 # Credits:
 Background music by [pix](https://www.youtube.com/@Pixverses):
